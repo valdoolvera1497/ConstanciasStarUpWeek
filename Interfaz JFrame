@@ -1,0 +1,194 @@
+package startupweek2;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+import javax.swing.table.DefaultTableModel;
+
+
+public class Registro extends javax.swing.JFrame {
+
+    /**
+     * Creates new form Registro
+     */
+    public Registro() {
+        initComponents();
+    }
+
+
+
+    metodos m = new metodos();
+
+    public void limpear() {
+        txtEmail.setText("");
+        txtNombre.setText("");
+        JCBoletos.setSelectedIndex(0);
+    }
+    private void btnRegistroActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        lblAlerta2.setText("");
+        lblAlerta1.setText("");
+        boolean pass = false;
+        pass = validar();
+        if (pass == true) {
+            boolean registrado = m.registrar(txtNombre.getText(), txtEmail.getText(), JCBoletos.getItemAt(JCBoletos.getSelectedIndex()));
+
+            if (registrado == true) {
+                lblAlerta2.setText("Se ha registrado con exito.");
+                limpear();
+            }
+        }
+    }                                           
+    public boolean validar() {
+        boolean pass = false;
+        int seleccionado = JCBoletos.getSelectedIndex();
+        String Email = txtEmail.getText();
+        Email = Email.replaceAll(" ", "");
+
+        String nombre = txtNombre.getText();
+        nombre = nombre.replaceAll(" ", "");
+        if (Email.length() == 0) {
+            lblAlerta1.setText("*E-mail esta vacio");
+            pass = false;
+        } else if (nombre.length() == 0) {
+            lblAlerta1.setText("*Nombre esta vacio");
+            pass = false;
+        } else if (seleccionado == 0) {
+            lblAlerta1.setText("*Boleto no esta seleccionado");
+            pass = false;
+        } else {
+            lblAlerta1.setText("");
+            pass = true;
+        }
+
+        return pass;
+    }
+
+    private void TXTbuscarActionPerformed(java.awt.event.ActionEvent evt) {                                          
+
+    }                                         
+    String texto = "";
+    private void TXTbuscarKeyPressed(java.awt.event.KeyEvent evt) {                                     
+        //String texto=TXTbuscar.getText();
+
+        if (evt.getKeyCode() == 8) {
+            String aux = "";
+            for (int i = 0; i < texto.length() - 1; i++) {
+                aux += texto.charAt(i);
+            }
+            texto = aux;
+        } else {
+            texto += evt.getKeyChar();
+        }
+
+        try {
+            String[] titulos = {"nombre", "E-mail", "Boleto"};
+            String[] registros = new String[50];
+
+            String sql = "SELECT * FROM registros_valdo2 WHERE nombre LIKE '%" + texto + "%'";
+
+            metodos.asistencias = new DefaultTableModel(null, titulos);
+
+            Conexion cn = new Conexion();
+            Statement st;
+            ResultSet rs;
+            try {
+                st = cn.con.createStatement();
+                rs = st.executeQuery(sql);
+                while (rs.next()) {
+                    registros[0] = rs.getString("nombre");
+                    registros[1] = rs.getString("correo");
+                    registros[2] = rs.getString("tipo_boleto");
+                    metodos.asistencias.addRow(registros);
+                }
+
+                Registro.JTasistencias.setModel(metodos.asistencias);
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, ex);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Registro.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Registro.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+    }                                    
+
+    private void btnGenerarActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        try {
+            m.CrearCarpeta();
+            m.RellenarTabkaEventos();
+            m.CrearConstancias();
+
+        } catch (Exception ex) {
+            JOptionPane.showConfirmDialog(null, ex.toString());
+        }
+    }                                          
+
+    private void btnEnviarActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        m.EnviarCorreo();
+    }                                         
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+
+            JFrame.setDefaultLookAndFeelDecorated(true);
+            JDialog.setDefaultLookAndFeelDecorated(true);
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Registro().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JComboBox<String> JCBoletos;
+    public static javax.swing.JTable JTasistencias;
+    private javax.swing.JTextField TXTbuscar;
+    private javax.swing.JButton btnEnviar;
+    private javax.swing.JButton btnGenerar;
+    private javax.swing.JButton btnRegistro;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLayeredPane jLayeredPane1;
+    private javax.swing.JLayeredPane jLayeredPane3;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTabbedPane jTabbedPane2;
+    private javax.swing.JLabel lblAlerta1;
+    private javax.swing.JLabel lblAlerta2;
+    private javax.swing.JTextField txtEmail;
+    private javax.swing.JTextField txtNombre;
+    // End of variables declaration                   
