@@ -1,0 +1,461 @@
+package startupweek2;
+
+import com.itextpdf.text.BadElementException;
+import com.itextpdf.text.Chapter;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
+
+
+public class metodos {
+
+    public static DefaultTableModel asistencias = new DefaultTableModel();
+    public static DefaultTableModel Eventos = new DefaultTableModel();
+
+    public void RellenarTablaRegistros() throws SQLException, ClassNotFoundException {
+        asistencias.addColumn("nombre");
+        asistencias.addColumn("E-mail");
+        asistencias.addColumn("Boleto");
+        asistencias.addColumn("password");
+        int registros = 0;
+        Conexion cn = new Conexion();
+        Statement st;
+        ResultSet rs;
+
+        Conexion cn2 = new Conexion();
+        Statement st2;
+        ResultSet rs2;
+        try {
+            st = cn.con.createStatement();
+            rs = st.executeQuery("select count(*) from registros_valdo2");
+            while (rs.next()) {
+                registros = rs.getInt("count(*)");
+            }
+        } catch (Exception e) {
+            JOptionPane.showConfirmDialog(null, e.toString());
+        }
+
+        asistencias.setNumRows(registros);
+
+        try {
+
+            st2 = cn2.con.createStatement();
+            rs2 = st2.executeQuery("select * from registros_valdo2");
+            int row = 0;
+            while (rs2.next()) {
+                asistencias.setValueAt(rs2.getString("nombre"), row, 0);
+                asistencias.setValueAt(rs2.getString("correo"), row, 1);
+                asistencias.setValueAt(rs2.getString("tipo_boleto"), row, 2);
+                asistencias.setValueAt(rs2.getString("password"), row, 3);
+                
+                row++;
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showConfirmDialog(null, e.toString());
+        }
+        Registro.JTasistencias.setModel(asistencias);
+
+    }
+
+    public void RellenarTabkaEventos() throws SQLException, ClassNotFoundException {
+        Eventos.addColumn("tipo");
+        Eventos.addColumn("nombre");
+        Eventos.addColumn("lugar");
+        Eventos.addColumn("Fecha");
+        int registros = 0;
+        Conexion cn = new Conexion();
+        Statement st;
+        ResultSet rs;
+
+        Conexion cn2 = new Conexion();
+        Statement st2;
+        ResultSet rs2;
+        try {
+            st = cn.con.createStatement();
+            rs = st.executeQuery("select count(*) from eventos ");
+            while (rs.next()) {
+                registros = rs.getInt("count(*)");
+            }
+        } catch (Exception e) {
+            JOptionPane.showConfirmDialog(null, e.toString());
+        }
+
+        Eventos.setNumRows(registros);
+
+        try {
+
+            st2 = cn2.con.createStatement();
+            rs2 = st2.executeQuery("select * from eventos where tipo = 'taller'");
+            int row = 0;
+            while (rs2.next()) {
+                Eventos.setValueAt(rs2.getString("tipo"), row, 0);
+                Eventos.setValueAt(rs2.getString("descripcion"), row, 1);
+                Eventos.setValueAt(rs2.getString("lugar"), row, 2);
+                Eventos.setValueAt(rs2.getString("fecha"), row, 3);
+                row++;
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showConfirmDialog(null, e.toString());
+        }
+
+    }
+
+    public boolean registrar(String nombre, String correo, String boleto) {
+        boolean pass = false;
+        try {
+            Conexion cn = new Conexion();
+            Statement st;
+            ResultSet rs;
+
+            LocalDateTime myDateObj = LocalDateTime.now();
+            DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = myDateObj.format(myFormatObj);
+            String password = "";
+            for (int i = 0; i < 10; i++) {
+                password += (int) (Math.random() * 10);
+            }
+            st = cn.con.createStatement();
+            st.execute("insert into registros_valdo2 (nombre, correo,tipo_boleto,data_created,password,enviado) "
+                    + "values('" + nombre + "','" + correo + "','" + boleto + "','" + formattedDate + "','" + password + "'," + 0 + ")");
+
+        } catch (Exception e) {
+            JOptionPane.showConfirmDialog(null, e.toString());
+            return pass;
+        }
+        pass = true;
+        return pass;
+    }
+
+    public void CrearCarpeta() {
+        for (int i = 0; i < asistencias.getRowCount(); i++) {
+            File f = new File("C:\\constancias2\\" + (String) asistencias.getValueAt(i, 1));
+            if (f.exists()) {
+
+            } else {
+                if (f.mkdirs()) {
+                    System.out.println("se creo el direcctorio: " + f.getPath());
+                }
+            }
+        }
+
+    }
+
+    public void CrearConstancias() {
+        int Personas = asistencias.getRowCount();
+        int Evento = Eventos.getRowCount();
+        String[] Evento1 = new String[6];
+        Evento1[0]="Modelo_Canvas";
+        Evento1[1]="Aprende_Phyton";
+        Evento1[2]="design_Thinking";
+        Evento1[3]="persuasion_estrategica";
+        Evento1[4]="creatividad";
+        Evento1[5]="Trascender_vs_sobrevivir";
+        File f = new File("");
+        File archivos = new File("C:\\constancias2");
+        String RutaFont = f.getAbsolutePath() + "\\Fuentes\\Montserrat-Regular.ttf";
+        String RutaImagen = f.getAbsolutePath() + "\\Imagen\\Constancia StartupWeek 2019.jpg";
+        String RutaConstancia = archivos.getPath();
+        Document document = null;
+
+        try {
+
+            BaseFont baseFont = BaseFont.createFont(RutaFont, BaseFont.WINANSI, BaseFont.EMBEDDED);
+            Font fuenteNombre = new Font(baseFont);
+            fuenteNombre.setSize(25);
+
+            Font Relleno = new Font(baseFont);
+            Relleno.setStyle(Font.NORMAL);
+            Relleno.setSize(16);
+
+            Font EventoFuente = new Font(baseFont);
+            EventoFuente.setStyle(Font.BOLD);
+            EventoFuente.setSize(16);
+
+            Font fuenteFecha = new Font(baseFont);
+            fuenteFecha.setSize(14);
+            fuenteFecha.setStyle(Font.NORMAL);
+            for (int e = 0; e < Evento; e++) {
+
+                for (int i = 0; i < Personas; i++) {
+                    String fileDir = RutaConstancia + "\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-"+Evento1[e]+".pdf";
+                    Font chapterFont = FontFactory.getFont(FontFactory.TIMES_BOLD, 26, Font.BOLDITALIC);
+
+                    Font NombreFont = fuenteNombre;
+                    Font fecha = fuenteFecha;
+
+                    //String imagen = "C:\\Users\\Jesus Cardenas\\Documents\\NetBeansProjects\\ConstanciasWEB\\Constancia Week.jpg";
+                    document = new Document(PageSize.A4.rotate());
+                    try {
+
+                        try {
+
+                            PdfWriter.getInstance(document, new FileOutputStream(fileDir));
+
+                        } catch (Exception fileNotFoundException) {
+                            System.out.println("No such file was found to generate the PDF " + "(No se encontró el fichero para generar el pdf)" + fileNotFoundException);
+                        }
+                        document.open();
+                        // We add metadata to PDF
+                        // Añadimos los metadatos del PDF
+
+                        // First page
+                        // Primera página 
+                        //document.add(Chunk.NEWLINE);
+                        Chunk chunk = new Chunk("", NombreFont);
+                        // chunk.setBackground(BaseColor.GRAY);
+
+                        Phrase phrase = new Phrase();
+                        phrase.add(chunk);
+                        Paragraph Nom = new Paragraph();
+
+                        /*Chapter chapter = new Chapter(new Paragraph(Nom), 1);
+                        chapter.setNumberDepth(0);*/
+ /*---------------------------Relleno---------------------------------------------------------*/
+                        Image image;
+                        try {
+                            int indentation = 0;
+                            image = Image.getInstance(RutaImagen);
+                            /*float scaler = ((document.getPageSize().getWidth() - document.leftMargin()
+                                           - document.rightMargin() - indentation) / image.getWidth()) * 110;
+                            image.scalePercent(scaler);*/
+                            image.scaleToFit(750, 750);
+                            // image.setAlignment(Chunk.ALIGN_CENTER);
+                            image.setAbsolutePosition(45, 8/*Float.parseFloat("7"*/);
+
+                            /*int indentation = -1;
+                            image = Image.getInstance(RutaImagen);
+                            float scaler = ((document.getPageSize().getWidth() - document.leftMargin()
+                           - document.rightMargin() - indentation) / image.getWidth()) * 100;
+                            image.scalePercent(scaler);
+                            //image.setLeft(10);
+                            // image.setWidthPercentage(100);*/
+                            document.add(image);
+                        } catch (BadElementException ex) {
+                            System.out.println("Image BadElementException" + ex);
+                        } catch (IOException ex) {
+                            System.out.println("Image IOException " + ex);
+                        }
+                        Paragraph Re = new Paragraph();
+                        Re.setSpacingBefore(180);
+                        Re.setFont(Relleno);
+                        Re.add(phrase);
+                        Re.add("Por su valiosa participacion en el taller ");
+                        Re.setFont(EventoFuente);
+                        Re.add('"' + Eventos.getValueAt(e, 1).toString() + '"');
+                        Re.setFont(Relleno);
+                        Re.add(chunk.NEWLINE);
+                        Re.setSpacingAfter(10);
+                        Re.add("dentro de las actividades de ");
+
+                        Re.setFont(EventoFuente);
+                        Re.add("Techstars Navojoa Startup Week 2019");
+                        Re.setSpacingAfter(10);
+                        Re.setFont(Relleno);
+                        Re.add(" en la");
+                        Re.add(chunk.NEWLINE);
+                        Re.add("semana global del emprendimiento, reconocemos a:");
+                        Re.setAlignment(Element.ALIGN_CENTER);
+                        Re.setSpacingAfter(35);
+                        document.add(Re);
+                        /*------------------------------Nombre------------------------------------------------------*/
+
+                        Nom.setFont(fuenteNombre);
+                        Nom.add(phrase);
+                        Nom.add((String) asistencias.getValueAt(i, 0));
+                        Nom.setAlignment(Element.ALIGN_CENTER);
+                        Nom.setSpacingAfter(120);
+                        document.add(Nom);
+                        /*-------------------------------Fecha------------------------------------------------------*/
+                        Paragraph fe = new Paragraph();
+                        fe.add(chunk.NEWLINE);
+                        fe.add(chunk.NEWLINE);
+                        fe.add(chunk.NEWLINE);
+                        fe.add(chunk.NEWLINE);
+                        fe.add(chunk.NEWLINE);
+                        fe.setFont(fecha);
+
+                        String Mes = "Noviembre";
+                        String Año = "";
+                        String Dia = "";
+                        String FechaCompleta = "";
+                        int contador = 0;
+                        for (int D = 0; D < Eventos.getValueAt(e, 3).toString().length(); D++) {
+                            if (Eventos.getValueAt(e, 3).toString().charAt(D) == '-') {
+                                contador++;
+                            } else if (contador == 0) {
+                                Año += Eventos.getValueAt(e, 3).toString().charAt(D);
+                            } else if (contador == 2) {
+                                Dia += Eventos.getValueAt(e, 3).toString().charAt(D);
+                            }
+                        }
+                        FechaCompleta = Dia + "-" + Mes + "-" + Año;
+
+                        fe.add("         " + FechaCompleta);
+                        fe.setAlignment(Paragraph.ALIGN_CENTER);
+
+                        document.add(fe);
+
+                        // We add an image (Añadimos una imagen)
+                        document.close();
+                        // JOptionPane.showMessageDialog(null, "Your PDF file has been generated!(¡Se ha generado tu hoja PDF!");
+                        /* session.setAttribute("Certificado",document);
+                        response.sendRedirect("Subir.jsp");*/
+                    } catch (DocumentException documentException) {
+                        System.out.println("The file not exists (Se ha producido un error al generar un documento): " + documentException);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    public void EnviarCorreo(){
+            String clave = "swNAVOJOA2019*";  //Para la dirección nomcuenta@gmail.com
+            String remitente = "navojoa@startupweek.page";
+            Properties props = System.getProperties();
+            props.put("mail.smtp.host", "smtp.gmail.com");  //El servidor SMTP de Google
+            props.put("mail.smtp.user", remitente);
+            props.put("mail.smtp.clave", clave);    //La clave de la cuenta
+            props.put("mail.smtp.auth", "true");    //Usar autenticación mediante usuario y clave
+            props.put("mail.smtp.starttls.enable", "true"); //Para conectar de manera segura al servidor SMTP
+            props.put("mail.smtp.port", "587"); //El puerto SMTP seguro de Google
+            File f = new File("C:");
+            
+            
+            for (int i = 0; i < asistencias.getRowCount(); i++) {
+            String[] archivos =new String[6];
+            archivos[0]= f.getPath() + "\\constancias2\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-Aprende_Phyton.pdf";
+            archivos[1]= f.getPath() + "\\constancias2\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-Modelo_Canvas.pdf";
+            archivos[2]= f.getPath() + "\\constancias2\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-creatividad.pdf";
+            archivos[3]= f.getPath() + "\\constancias2\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-design_Thinking.pdf";
+            archivos[4]= f.getPath() + "\\constancias2\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-persuasion_estrategica.pdf";
+            archivos[5]= f.getPath() + "\\constancias2\\"+asistencias.getValueAt(i, 1)+"\\"+asistencias.getValueAt(i, 1)+"-Trascender_vs_sobrevivir.pdf";
+            
+               Session s = Session.getDefaultInstance(props);
+                MimeMessage message = new MimeMessage(s);
+
+                String asunto = "Constancias Startup Week";
+                String cuerpo = "<div> \n" +
+"            <center>\n" +
+"            <p><font face=\"verdana\" size=\"4\" color=\"black\" ><p><strong>Hola "+asistencias.getValueAt(i, 0)+" </strong></font></p>\n" +
+"            <br>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" >¡Te agradecemos por haber formado parte del evento de emprendimiento mas grande del mundo, Startup Week!</font></p>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" >Nos alegra saber que hiciste el esfuerzo de haber invertido una parte de tu valioso tiempo en lo que fue el Starup Week, por eso mismo, gracias a ese tiempo y dedicación tuyo, se te hace acreedor de una constancia por cada taller que fue impartido a lo largo de este magnífico evento.</font></p>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" >De igual manera puedes encontrar tu listado de constancias entrando al link que se muestra a continuación. De igual forma, para entrar a la página debes de utilizar el usuario y contraseña que también se te proporciona abajo.</font></p>\n" +
+"            </center>\n" +
+"        </div>\n" +
+"        <div>\n" +
+"            <br>\n" +
+"            <br>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" ><p><strong>Acceso a la pagina de constancias: </strong><a href=\"http://startupweek.servehttp.com:8080/\">http://startupweek.servehttp.com</a></font></p>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" ><p><strong>Usuario/Correo: "+asistencias.getValueAt(i, 1)+"</strong></font></p>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" ><p><strong>Password: "+asistencias.getValueAt(i, 3)+"</strong></font></p>\n" +
+"            <br>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" >Esperamos que hayas pasado un gran experiencia durante el evento.</font></p>\n" +
+"            <br>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" >Atentamente,</font></p>\n" +
+"            <br>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" ><p><strong>Ricardo Valenzuela R.</strong></font></p>\n" +
+"            <p><font face=\"verdana\" size=\"3\" color=\"black\" ><p><strong>Techstars Startup Week / Invest Navojoa</strong></font></p>\n" +
+"        </div>";
+                 
+                try {
+                    message.setFrom(new InternetAddress(remitente));
+                    message.addRecipients(Message.RecipientType.TO, (String) asistencias.getValueAt(i, 1));   //Se podrían añadir varios de la misma manera
+                    message.setSubject(asunto);
+                    
+                    
+                    BodyPart texto = new MimeBodyPart();
+                    texto.setContent(cuerpo,"text/html");
+                    
+                    BodyPart adjunto = new MimeBodyPart();
+                    adjunto.setDataHandler(new DataHandler(new FileDataSource(archivos[0])));
+                    adjunto.setFileName("Aprende Phyton.pdf");
+                    
+                    BodyPart adjunto2 = new MimeBodyPart();
+                    adjunto2.setDataHandler(new DataHandler(new FileDataSource(archivos[1])));
+                    adjunto2.setFileName("creatividad.pdf");
+                    
+                    BodyPart adjunto3 = new MimeBodyPart();
+                    adjunto3.setDataHandler(new DataHandler(new FileDataSource(archivos[2])));
+                    adjunto3.setFileName("design Thinking.pdf");
+                    
+                    BodyPart adjunto4 = new MimeBodyPart();
+                    adjunto4.setDataHandler(new DataHandler(new FileDataSource(archivos[3])));
+                    adjunto4.setFileName("persuasion estrategica.pdf");
+                    
+                    BodyPart adjunto5 = new MimeBodyPart();
+                    adjunto5.setDataHandler(new DataHandler(new FileDataSource(archivos[4])));
+                    adjunto5.setFileName("Trascender vs sobrevivir.pdf");
+                    
+                    BodyPart adjunto6 = new MimeBodyPart();
+                    adjunto6.setDataHandler(new DataHandler(new FileDataSource(archivos[5])));
+                    adjunto6.setFileName("Modelo Canvas.pdf");
+                    
+                    MimeMultipart multiParte = new MimeMultipart();
+                    multiParte.addBodyPart(texto);
+                    multiParte.addBodyPart(adjunto);
+                    multiParte.addBodyPart(adjunto2);
+                    multiParte.addBodyPart(adjunto3);
+                    multiParte.addBodyPart(adjunto4);
+                    multiParte.addBodyPart(adjunto5);
+                    multiParte.addBodyPart(adjunto6);
+                    
+                    message.setContent(multiParte);
+                   
+                    Transport transport = s.getTransport("smtp");
+                    transport.connect("smtp.gmail.com", remitente, clave);
+                    transport.sendMessage(message, message.getAllRecipients());
+                    transport.close();
+                    
+
+                } catch (Exception me) {
+                    me.printStackTrace();   //Si se produce un error
+                    System.out.println(me.getMessage());
+                }
+            }
+    } 
+}
