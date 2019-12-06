@@ -1,0 +1,353 @@
+<%-- 
+    Document   : Principal
+    Created on : 15/10/2019, 03:38:43 PM
+    Author     : Osval
+--%>
+
+<%@page import="javax.script.ScriptEngine"%>
+<%@page import="javax.script.ScriptEngineManager"%>
+<%@page import="java.io.BufferedReader"%>
+<%@page import="java.io.InputStreamReader"%>
+<%@page import="java.net.HttpURLConnection"%>
+<%@page import="java.net.URL"%>
+<%@page import="java.io.File"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+
+<%@include file="Conexion.jsp" %>
+
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Constancias</title>
+        <link rel="icon" type="image/png" href="images/lg.png" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+        <link href="css/Styles.css" rel="stylesheet">
+
+
+
+        <!--===============================================================================================-->
+        <link rel="icon" type="image/png" href="images/lg.png">
+        <!--===============================================================================================-->
+        <link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+        <!--===============================================================================================-->
+        <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+        <!--===============================================================================================-->
+        <link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+        <!--===============================================================================================-->
+        <link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+        <!--===============================================================================================-->
+        <link rel="stylesheet" type="text/css" href="vendor/daterangepicker/daterangepicker.css">
+        <!--===============================================================================================-->
+        <link href="css/StylesValdo.css" rel="stylesheet">
+        <!--===============================================================================================-->
+        <link rel="dns-prefetch" href="//s.w.org">
+        <!--===============================================================================================-->
+
+
+
+
+        <style>
+
+            #NombreUsuarioLogeado{
+                width: 30%;                  /*Aqui se modifica el ancho del recuadro*/
+                position: absolute;          /*Esto se utiliza para que la posicion del recuadro se base en la ventana del navegador*/
+                top:  10%;                  /*Aqui se modifica el movimiento del recuadro arriba-abajo*/
+                left: 52%;                 /*Aqui se modifica el movimiento del recuadro izquierda-derecha*/
+                /* border: solid 1px #1c0000;       /*Aqui se modifica el marco del recuadro*/
+                font: 100% sans-serif;       /*Aqui se modifica el tipo de letra del texto de los div*/
+                color: black;                /* Aqui se modifica el color del texto de los div*/
+            }
+
+            #Diagonal{
+                width: 16%;                  /*Aqui se modifica el ancho del recuadro*/
+                position: absolute;          /*Esto se utiliza para que la posicion del recuadro se base en la ventana del navegador*/
+                top:  7%;                  /*Aqui se modifica el movimiento del recuadro arriba-abajo*/
+                left: 76.5%;                 /*Aqui se modifica el movimiento del recuadro izquierda-derecha*/
+                /* border: solid 1px #1c0000;       /*Aqui se modifica el marco del recuadro*/
+                font: 200% sans-serif;       /*Aqui se modifica el tipo de letra del texto de los div*/
+                color: black;                /* Aqui se modifica el color del texto de los div*/
+            }
+
+
+            .boton_regresar{
+                border: none;
+                font-size: 115% ;
+                font-family: sans-serif;
+                color: white;
+                background-color: #009933;
+                border-radius: 7px;
+                padding-left: 5%;
+                padding-right: 5%;
+                padding-bottom: 0.5%;               /* Tamaño del boton hacia ABAJO */
+                padding-top: 0.5%;                  /* Tamaño del boton hacia ARRIBA */
+                /*font-weight: 800;*/               /* Gordura de las letras */
+                /*border: 2px solid #0016b0;*/
+            }
+
+            .boton_regresar:hover{
+                color: white;
+                background-color: green;
+            }
+
+
+
+            #CerrarSesion{
+                width: 16%;                  /*Aqui se modifica el ancho del recuadro*/
+                position: absolute;          /*Esto se utiliza para que la posicion del recuadro se base en la ventana del navegador*/
+                top:  25%;                  /*Aqui se modifica el movimiento del recuadro arriba-abajo*/
+                left: 83%;                 /*Aqui se modifica el movimiento del recuadro izquierda-derecha*/
+                /* border: solid 1px #1c0000;       /*Aqui se modifica el marco del recuadro*/
+                font: 100% sans-serif;       /*Aqui se modifica el tipo de letra del texto de los div*/
+                color: red;                /* Aqui se modifica el color del texto de los div*/
+            }
+
+        </style>
+
+
+
+
+        <script>
+
+            $(window).load(function () {
+                $("#user").text("olverafloresluisosvaldo@gmail.com");
+
+            });
+
+
+
+            function getCookie(cname) {
+                var name = cname + "=";
+                var decodedCookie = decodeURIComponent(document.cookie);
+                var ca = decodedCookie.split(';');
+                for (var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+
+            function checkCookie() {
+                var user = getCookie("usuario");
+                var tipo = getCookie("tipousuario");
+                if (user != "" && tipo != "") {
+                    //window.location.href = "/Principal.jsp";
+                }
+            }
+
+
+
+            function getUsuario() {
+                return getCookie("usuario");
+            }
+
+        </script>
+
+
+    </head>
+    <body>
+
+
+        <%            
+            HttpSession sesion = request.getSession(false);
+            String usuario = (String) sesion.getAttribute("varSUsuario");
+
+            if (usuario.equals(null)) {
+                response.sendRedirect("login.jsp");
+            }
+
+        %>
+
+
+        <!--Inicio navbar (barra navegacion ogt) -->
+        <nav class="navbar navbar-default navbar-fixed-top shadow-lg" id="barra">
+            <div class="container">
+                <!--Esta parte es donde esta el logo y el boton de inicio -->
+                <div class="navbar-header">
+                    <a class="navbar-brand">
+                        <img src="images/logosw.png"  class="d-inline-block align-top" alt=""> 
+                    </a>
+                </div>
+                <li class="nav-item dropdown form-inline ">
+                    <a class="nav-link dropdown-toggle btn btn-outline-dark" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <%=usuario%>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <form action="CerrarSesion.jsp" method="POST">
+                            <button class="dropdown-item" type="submit" >Cerrar Sesión</button>
+                        </form>
+                    </div>
+                </li>
+            </div>
+        </nav>
+        <!--Fin navbar (barra navegacion ogt) -->
+
+
+
+      
+        <!-- Comienzo del cuerpo-->
+        <div class="container"><!-- contenedor principal-->
+            <div class="row"><!-- comienzo de fila principal-->
+                <div class="col-md-12"><!-- comienzo de columna izquierda-->
+
+
+                    <center>
+                        <h1>
+                            <font size="6" color="yellow">
+                            Listado de Constancias
+                            </font>
+                        </h1>
+                    </center>
+
+                    <br>
+                    <br>
+
+                    <center>
+
+
+                        <%
+                        
+                            //Obteniendo la ruta donde se encuentran las constancias
+                            File carpeta = new File("C:\\constancias\\"+usuario);
+                            //Obteniendo el listado de archivos(constancias) que se encuentran en la ruta
+                            String listado[] = carpeta.list();
+
+
+                            String cons = "";
+                            if (listado == null || listado.length == 0) {
+                                out.println("No hay elementos dentro de la carpeta actual");
+                            } else {
+                                for (int z = 0; z < listado.length; z++) {
+
+                                    //En esta variable "cons" se guarda el listado de nombres de los archivos(constancias) que se encuentran en la carpeta de la ruta especificada
+                                    cons = listado[z].toString();
+    
+                                    //Condicional que muestra el listado de constancias que estan asociadas a la variable de sesion "usuario"
+                                    if (listado[z].equals(usuario + "-" + "Modelo_Canvas" + ".pdf")) {
+
+                        %>
+
+                        <form id="Taller_1" action="DescargaConstancias.jsp">  
+                            <button type="submit" style="background-color: transparent; border: none">
+                                <font color='white' size='4'> 
+                                <%= listado[z]%> 
+                                </font>
+                            </button>
+                            <br>
+                            <br>
+                            <input class="descargar" type="hidden" value="<%= cons%>" name="constancia">
+                        </form>
+                        <%
+                            }
+                            if (listado[z].equals(usuario + "-" + "Aprende_Phyton" + ".pdf")) {
+
+                        %>
+
+                        <form id="Taller_2" action="DescargaConstancias.jsp">  
+                            <button type="submit" style="background-color: transparent; border: none">
+                                <font color='white' size='4'> 
+                                <%= listado[z]%> 
+                                </font>
+                            </button>
+                            <br>
+                            <br>
+                            <input class="descargar" type="hidden" value="<%= cons%>" name="constancia">
+                        </form>
+                        <%
+                            }
+                            if (listado[z].equals(usuario + "-" + "design_Thinking" + ".pdf")) {
+
+                        %>
+
+                        <form id="Taller_3" action="DescargaConstancias.jsp">  
+                            <button type="submit" style="background-color: transparent; border: none">
+                                <font color='white' size='4'> 
+                                <%= listado[z]%> 
+                                </font>
+                            </button>
+                            <br>
+                            <br>
+                            <input class="descargar" type="hidden" value="<%= cons%>" name="constancia">
+                        </form>
+                        <%
+                            }
+                            if (listado[z].equals(usuario + "-" + "persuasion_estrategica" + ".pdf")) {
+
+                        %>
+
+                        <form id="Taller_4" action="DescargaConstancias.jsp">  
+                            <button type="submit" style="background-color: transparent; border: none">
+                                <font color='white' size='4'> 
+                                <%= listado[z]%> 
+                                </font>
+                            </button>
+                            <br>
+                            <br>
+                            <input class="descargar" type="hidden" value="<%= cons%>" name="constancia">
+                        </form>
+                        <%
+                            }
+                            if (listado[z].equals(usuario + "-" + "creatividad" + ".pdf")) {
+
+                        %>
+
+                        <form id="Taller_5" action="DescargaConstancias.jsp">  
+                            <button type="submit" style="background-color: transparent; border: none">
+                                <font color='white' size='4'> 
+                                <%= listado[z]%> 
+                                </font>
+                            </button>
+                            <br>
+                            <br>
+                            <input class="descargar" type="hidden" value="<%= cons%>" name="constancia">
+                        </form>
+                        <%
+                            }
+                            if (listado[z].equals(usuario + "-" + "Trascender_vs_sobrevivir" + ".pdf")) {
+
+                        %>
+
+                        <form id="Taller_6" action="DescargaConstancias.jsp">  
+                            <button type="submit" style="background-color: transparent; border: none">
+                                <font color='white' size='4'> 
+                                <%= listado[z]%> 
+                                </font>
+                            </button>
+                            <br>
+                            <br>
+                            <input class="descargar" type="hidden" value="<%= cons%>" name="constancia">
+                        </form>
+                        <%
+                                    }
+
+                                }
+                            }
+
+                        %>
+                    </center>
+
+
+                </div><!-- fin de columna izquierda-->
+            </div><!-- fin de fila principal-->
+        </div><!-- fin contenedor principal-->
+
+
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"  crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"  crossorigin="anonymous">
+        </script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"  crossorigin="anonymous">
+        </script>
+        <script src="js/main.js"></script>
+
+
+    </body>
+</html>
